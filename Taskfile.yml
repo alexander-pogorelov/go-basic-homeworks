@@ -1,0 +1,57 @@
+version: '3'
+
+# В шаблоне один модуль, поэтому обход каталогов не нужен: команды
+# запускаются прямо в корне репозитория. Taskfile не зависит от внешней
+# оболочки - на Windows у вас может не быть ни make, ни POSIX-окружения,
+# и Taskfile существует именно для этого случая.
+
+tasks:
+  default:
+    desc: Список доступных целей
+    cmds:
+      - cmd: task --list
+
+  build:
+    desc: Сборка проекта
+    cmds:
+      - cmd: go build ./...
+
+  test:
+    desc: Запуск тестов
+    cmds:
+      - cmd: go test ./...
+
+  lint:
+    desc: Линтер
+    cmds:
+      - cmd: golangci-lint run ./...
+
+  vet:
+    desc: go vet
+    cmds:
+      - cmd: go vet ./...
+
+  fmt:
+    desc: Форматирование кода
+    cmds:
+      - cmd: gofmt -w .
+
+  fmt-check:
+    desc: Проверка форматирования
+    cmds:
+      - cmd: |-
+          if [ -n "$(gofmt -l .)" ]; then echo "Требуется gofmt:"; gofmt -l .; exit 1; fi
+
+  check:
+    desc: Формат, vet, сборка, линтер и тесты
+    cmds:
+      - task: fmt-check
+      - task: vet
+      - task: build
+      - task: lint
+      - task: test
+
+  run:
+    desc: Запуск приложения
+    cmds:
+      - cmd: go run ./cmd/todo

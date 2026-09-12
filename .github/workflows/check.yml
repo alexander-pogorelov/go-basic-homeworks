@@ -1,0 +1,43 @@
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          # Версия берётся из go.mod, чтобы проверка и проект не разъезжались
+          # при обновлении модуля.
+          go-version-file: go.mod
+
+      - name: Проверка форматирования
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "Эти файлы нужно отформатировать командой gofmt -w ."
+            echo "$files"
+            exit 1
+          fi
+
+      - name: go vet
+        run: go vet ./...
+
+      - name: Сборка
+        run: go build ./...
+
+      - name: Линтер
+        # Начиная с v7 действие поддерживает golangci-lint v2; на v6 прогон
+        # падает с «golangci-lint v2 is not supported».
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13.2
+
+      - name: Тесты
+        run: go test ./...

@@ -1,0 +1,42 @@
+version: "2"
+
+run:
+  timeout: 3m
+
+linters:
+  default: none
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - misspell
+    - revive
+    - staticcheck
+    - unused
+  exclusions:
+    rules:
+      - path: "_test\\.go"
+        linters:
+          - errcheck
+      # Имя типа PostgresStorage задано условием ДЗ-10 дословно, а revive
+      # считает postgres.PostgresStorage «заикающимся». Выхода у студента
+      # нет: переименовать тип - значит нарушить условие, а обязательный
+      # пункт про зелёную автопроверку никуда не девается.
+      #
+      # Исключение намеренно узкое: только это сообщение и только про этот
+      # тип. Правило про заикание в остальном работает - на именах, которые
+      # студент выбирает сам, оно полезно.
+      # Выражение намеренно совпадает с сообщением целиком: правило text
+      # ищет подстроку, и короткое "PostgresStorage" заглушило бы заодно
+      # все прочие замечания revive про этот тип - например, отсутствие
+      # документационного комментария над ним. Проверено прогоном.
+      #
+      # Строка в одинарных кавычках: в двойных YAML разбирает обратную
+      # косую черту как начало escape-последовательности.
+      - text: '^exported: type name will be used as postgres\.PostgresStorage by other packages, and that stutters; consider calling this Storage$'
+        linters:
+          - revive
+
+formatters:
+  enable:
+    - gofmt
