@@ -1,9 +1,14 @@
-// Command todo — точка входа менеджера задач, сквозного проекта домашних
-// заданий курса Go Basic.
+// main package
 package main
 
 import "fmt"
 
 func main() {
-	fmt.Println("Менеджер задач: проект создан, приступаем к домашним заданиям.")
+	var name string
+	fmt.Print("Как вас зовут? ")
+	_, err := fmt.Scanln(&name)
+	if err != nil {
+		return
+	}
+	fmt.Printf("Привет, %s!\n", name)
 }
