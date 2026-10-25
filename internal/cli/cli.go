@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/alexander-pogorelov/go-basic-homeworks/internal/task"
+	"github.com/alexander-pogorelov/go-basic-homeworks/internal/model"
 )
 
 // ReadLine читает одну строку из сканера и обрезает пробелы по краям.
@@ -24,27 +24,28 @@ func printHeaders() {
 // PrintTasks печатает список всех задач в табличном виде.
 func PrintTasks() {
 	printHeaders()
-	for i := range task.Count() {
-		fmt.Printf("%-4d %-15s %s\n", task.ID(i), task.Status(i), task.Title(i))
+	for _, t := range model.Tasks() {
+		fmt.Println(t)
 	}
 }
 
 // PrintValidStatuses печатает список допустимых статусов.
 func PrintValidStatuses() {
 	fmt.Println("Валидные статусы:")
-	for _, status := range task.ValidStatuses() {
+	for _, status := range model.Statuses() {
 		fmt.Printf(" - %s\n", status)
 	}
 }
 
 // PrintTasksByStatus печатает задачи с указанным статусом.
 func PrintTasksByStatus(status string) {
+	st := model.CastToStatus(status)
 	printHeaders()
 	found := false
-	for i := range task.Count() {
-		if status == task.Status(i) {
+	for _, t := range model.Tasks() {
+		if st == t.Status() {
 			found = true
-			fmt.Printf("%-4d %-15s %s\n", task.ID(i), task.Status(i), task.Title(i))
+			fmt.Println(t)
 		}
 	}
 	if !found {

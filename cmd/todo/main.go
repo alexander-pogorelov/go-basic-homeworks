@@ -8,7 +8,7 @@ import (
 	"os"
 
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/cli"
-	"github.com/alexander-pogorelov/go-basic-homeworks/internal/task"
+	"github.com/alexander-pogorelov/go-basic-homeworks/internal/model"
 )
 
 func main() {
@@ -40,7 +40,7 @@ func main() {
 				fmt.Println("Ввод закончился, выходим.")
 				return
 			}
-			if !task.IsStatusValid(status) {
+			if !model.IsStatusValid(status) {
 				fmt.Println("Выбран невалидный статус")
 				cli.PrintValidStatuses()
 				continue
@@ -60,15 +60,15 @@ func main() {
 				fmt.Println("Ввод закончился, выходим.")
 				return
 			}
-			err := task.AddTask(title, status)
+			err := model.AddTask(title, status)
 			switch {
 			case err == nil:
 				fmt.Println("Задача успешно добавлена.")
-			case errors.Is(err, task.ErrEmptyTitle):
+			case errors.Is(err, model.ErrEmptyTitle):
 				fmt.Println("Ошибка! Вы не ввели название задачи.")
-			case errors.Is(err, task.ErrTitleTooLong):
+			case errors.Is(err, model.ErrTitleTooLong):
 				fmt.Println("Ошибка! Название задачи длиннее 100 символов.")
-			case errors.Is(err, task.ErrInvalidStatus):
+			case errors.Is(err, model.ErrInvalidStatus):
 				fmt.Println("Ошибка! Невалидный статус задачи.")
 				cli.PrintValidStatuses()
 			default:
