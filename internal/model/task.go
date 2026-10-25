@@ -27,25 +27,39 @@ type Task struct {
 	updatedAt time.Time
 }
 
-func NewTask(id int, title string, status Status) Task {
-	return Task{
-		id:        id,
+func NewTask(title string, status string) (*Task, error) {
+	if err := validateTask(title, status); err != nil {
+		return nil, err
+	}
+	task := &Task{
+		id:        nextID(),
 		title:     title,
-		status:    status,
+		status:    CastToStatus(status),
 		createdAt: time.Now(),
 		updatedAt: time.Now(),
 	}
+	return task, nil
 }
 
 func (t Task) String() string {
 	return fmt.Sprintf("%-4d %-15s %-20s %-20s %s", t.id, t.status, t.createdAt.Format(time.RFC822), t.updatedAt.Format(time.RFC822), t.title)
 }
 
-var tasks = []Task{
-	NewTask(1, "Подготовить презентацию", StatusNew),
-	NewTask(2, "Сделать ДЗ", StatusInProgress),
-	NewTask(3, "Купить книгу", StatusCompleted),
-	NewTask(4, "Пересмотреть лекцию", StatusInProgress),
+var tasks []Task
+
+func init() {
+	tasks = append(tasks, mustTask("Подготовить презентацию", string(StatusNew)))
+	tasks = append(tasks, mustTask("Сделать ДЗ", string(StatusInProgress)))
+	tasks = append(tasks, mustTask("Купить книгу", string(StatusCompleted)))
+	tasks = append(tasks, mustTask("Пересмотреть лекцию", string(StatusInProgress)))
+}
+
+func mustTask(title, status string) Task {
+	t, err := NewTask(title, status)
+	if err != nil {
+		panic(fmt.Sprintf("seed task %q: %v", title, err))
+	}
+	return *t
 }
 
 func validateTitle(title string) error {
@@ -93,10 +107,11 @@ func nextID() int {
 func AddTask(title, status string) error {
 	title = strings.TrimSpace(title)
 	status = strings.TrimSpace(status)
-	if err := validateTask(title, status); err != nil {
+	t, err := NewTask(title, status)
+	if err != nil {
 		return err
 	}
-	tasks = append(tasks, NewTask(nextID(), title, CastToStatus(status)))
+	tasks = append(tasks, *t)
 	return nil
 }
 
