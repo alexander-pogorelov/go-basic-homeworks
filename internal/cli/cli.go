@@ -18,7 +18,7 @@ func ReadLine(scanner *bufio.Scanner) (string, bool) {
 }
 
 func printHeaders() {
-	fmt.Printf("%-4s %-15s %s\n", "ID", "СТАТУС", "НАЗВАНИЕ")
+	fmt.Printf("%-4s %-15s %-20s %-20s %s\n", "ID", "СТАТУС", "СОЗДАНА", "ОБНОВЛЕНА", "НАЗВАНИЕ")
 }
 
 // PrintTasks печатает список всех задач в табличном виде.

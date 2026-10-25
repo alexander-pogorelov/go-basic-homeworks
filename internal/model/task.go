@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"time"
 	"unicode/utf8"
 )
 
@@ -19,21 +20,25 @@ var ErrTitleTooLong = errors.New("название задачи не может 
 var ErrInvalidStatus = errors.New("недопустимый статус задачи")
 
 type Task struct {
-	id     int
-	title  string
-	status Status
+	id        int
+	title     string
+	status    Status
+	createdAt time.Time
+	updatedAt time.Time
 }
 
 func NewTask(id int, title string, status Status) Task {
 	return Task{
-		id:     id,
-		title:  title,
-		status: status,
+		id:        id,
+		title:     title,
+		status:    status,
+		createdAt: time.Now(),
+		updatedAt: time.Now(),
 	}
 }
 
 func (t Task) String() string {
-	return fmt.Sprintf("%-4d %-15s %s", t.id, t.status, t.title)
+	return fmt.Sprintf("%-4d %-15s %-20s %-20s %s", t.id, t.status, t.createdAt.Format(time.RFC822), t.updatedAt.Format(time.RFC822), t.title)
 }
 
 var tasks = []Task{
