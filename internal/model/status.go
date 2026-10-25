@@ -2,6 +2,7 @@ package model
 
 import "slices"
 
+// Status представляет статус задачи.
 type Status string
 
 const (
@@ -22,10 +23,12 @@ var validStatuses = []Status{
 	StatusPaused,
 }
 
+// Statuses возвращает копию списка всех допустимых статусов задачи.
 func Statuses() []Status {
 	return slices.Clone(validStatuses)
 }
 
+// IsStatusValid сообщает, является ли переданная строка допустимым статусом задачи.
 func IsStatusValid(status string) bool {
 	st := Status(status)
 	for _, s := range validStatuses {
@@ -36,6 +39,8 @@ func IsStatusValid(status string) bool {
 	return false
 }
 
+// CastToStatus приводит строку к типу Status без проверки допустимости.
+// Для проверки используйте IsStatusValid.
 func CastToStatus(status string) Status {
 	return Status(status)
 }

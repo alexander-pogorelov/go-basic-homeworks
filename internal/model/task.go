@@ -19,6 +19,7 @@ var ErrTitleTooLong = errors.New("название задачи не может 
 // ErrInvalidStatus возвращается, если статус не входит в список допустимых.
 var ErrInvalidStatus = errors.New("недопустимый статус задачи")
 
+// Task — задача с названием, статусом и временными метками создания и обновления.
 type Task struct {
 	id        int
 	title     string
@@ -27,6 +28,8 @@ type Task struct {
 	updatedAt time.Time
 }
 
+// NewTask создаёт задачу с указанными названием и статусом.
+// Возвращает ошибку, если название или статус не прошли валидацию.
 func NewTask(title string, status string) (*Task, error) {
 	if err := validateTask(title, status); err != nil {
 		return nil, err
@@ -41,6 +44,7 @@ func NewTask(title string, status string) (*Task, error) {
 	return task, nil
 }
 
+// String возвращает строковое представление задачи для вывода.
 func (t Task) String() string {
 	return fmt.Sprintf("%-4d %-15s %-20s %-20s %s", t.id, t.status, t.createdAt.Format(time.RFC822), t.updatedAt.Format(time.RFC822), t.title)
 }
@@ -115,6 +119,7 @@ func AddTask(title, status string) error {
 	return nil
 }
 
+// Tasks возвращает копию списка всех задач.
 func Tasks() []Task {
 	return slices.Clone(tasks)
 }
