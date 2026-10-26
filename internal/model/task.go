@@ -109,8 +109,6 @@ func nextID() int {
 
 // AddTask добавляет задачу с указанными названием и статусом.
 func AddTask(title, status string) error {
-	title = strings.TrimSpace(title)
-	status = strings.TrimSpace(status)
 	t, err := NewTask(title, status)
 	if err != nil {
 		return err
