@@ -42,6 +42,41 @@ func (s *MemoryStorage) GetByID(id int) (*model.Task, error) {
 	return t, nil
 }
 
+// Delete удаляет задачу с указанным ID.
+func (s *MemoryStorage) Delete(id int) error {
+	if _, ok := s.byID[id]; !ok {
+		return ErrTaskNotFound
+	}
+	delete(s.byID, id)
+	for i, t := range s.tasks {
+		if t.ID() == id {
+			s.tasks = append(s.tasks[:i], s.tasks[i+1:]...)
+			return nil
+		}
+	}
+	return ErrTaskNotFound
+}
+
+// Update сохраняет изменения существующей задачи.
+func (s *MemoryStorage) Update(task *model.Task) error {
+	id := task.ID()
+
+	if _, ok := s.byID[id]; !ok {
+		return ErrTaskNotFound
+	}
+
+	s.byID[id] = task
+
+	for i, t := range s.tasks {
+		if t.ID() == id {
+			s.tasks[i] = task
+			return nil
+		}
+	}
+
+	return ErrTaskNotFound
+}
+
 // GetAll возвращает копию слайса всех задач в порядке их добавления.
 func (s *MemoryStorage) GetAll() []*model.Task {
 	clone := make([]*model.Task, len(s.tasks))

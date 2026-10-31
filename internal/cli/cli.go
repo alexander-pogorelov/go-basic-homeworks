@@ -22,16 +22,12 @@ func printHeaders() {
 	fmt.Printf("%-4s %-15s %-20s %-20s %s\n", "ID", "СТАТУС", "СОЗДАНА", "ОБНОВЛЕНА", "НАЗВАНИЕ")
 }
 
-func printTasks(tasks []*model.Task) {
+// PrintTasks печатает все задачи.
+func PrintTasks(tasks []*model.Task) {
 	printHeaders()
 	for _, t := range tasks {
 		fmt.Println(t)
 	}
-}
-
-// PrintTasks печатает все задачи из хранилища.
-func PrintTasks(s *storage.MemoryStorage) {
-	printTasks(s.GetAll())
 }
 
 // PrintValidStatuses печатает список допустимых статусов.
@@ -43,16 +39,11 @@ func PrintValidStatuses() {
 }
 
 // PrintTasksByStatus печатает задачи с указанным статусом.
-func PrintTasksByStatus(s *storage.MemoryStorage, status string) {
-	if !model.IsStatusValid(status) {
-		fmt.Println("Выбран невалидный статус")
-		PrintValidStatuses()
-		return
-	}
-	tasks := s.FilterByStatus(model.CastToStatus(status))
+func PrintTasksByStatus(s *storage.MemoryStorage, status model.Status) {
+	tasks := s.FilterByStatus(status)
 	if len(tasks) == 0 {
 		fmt.Println("Задач с таким статусом не найдено.")
 		return
 	}
-	printTasks(tasks)
+	PrintTasks(tasks)
 }

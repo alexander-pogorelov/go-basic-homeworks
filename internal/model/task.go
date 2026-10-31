@@ -44,6 +44,19 @@ func NewTask(title string, status string) (*Task, error) {
 	}, nil
 }
 
+// Update обновляет title и status задачи
+func (t *Task) Update(title, status string) error {
+	title = strings.TrimSpace(title)
+	status = strings.TrimSpace(status)
+	if err := validateTask(title, status); err != nil {
+		return err
+	}
+	t.title = title
+	t.status = CastToStatus(status)
+	t.updatedAt = time.Now()
+	return nil
+}
+
 // String возвращает строковое представление задачи для вывода.
 func (t *Task) String() string {
 	return fmt.Sprintf("%-4d %-15s %-20s %-20s %s", t.id, t.status, t.createdAt.Format(time.RFC822), t.updatedAt.Format(time.RFC822), t.title)
