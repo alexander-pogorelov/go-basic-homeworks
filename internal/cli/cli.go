@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/model"
+	"github.com/alexander-pogorelov/go-basic-homeworks/internal/storage"
 )
 
 // ReadLine читает одну строку из сканера и обрезает пробелы по краям.
@@ -21,12 +22,16 @@ func printHeaders() {
 	fmt.Printf("%-4s %-15s %-20s %-20s %s\n", "ID", "СТАТУС", "СОЗДАНА", "ОБНОВЛЕНА", "НАЗВАНИЕ")
 }
 
-// PrintTasks печатает список всех задач в табличном виде.
-func PrintTasks() {
+func printTasks(tasks []*model.Task) {
 	printHeaders()
-	for _, t := range model.Tasks() {
+	for _, t := range tasks {
 		fmt.Println(t)
 	}
+}
+
+// PrintTasks печатает все задачи из хранилища.
+func PrintTasks(s *storage.MemoryStorage) {
+	printTasks(s.GetAll())
 }
 
 // PrintValidStatuses печатает список допустимых статусов.
@@ -38,17 +43,16 @@ func PrintValidStatuses() {
 }
 
 // PrintTasksByStatus печатает задачи с указанным статусом.
-func PrintTasksByStatus(status string) {
-	st := model.CastToStatus(status)
-	printHeaders()
-	found := false
-	for _, t := range model.Tasks() {
-		if st == t.Status() {
-			found = true
-			fmt.Println(t)
-		}
+func PrintTasksByStatus(s *storage.MemoryStorage, status string) {
+	if !model.IsStatusValid(status) {
+		fmt.Println("Выбран невалидный статус")
+		PrintValidStatuses()
+		return
 	}
-	if !found {
+	tasks := s.FilterByStatus(model.CastToStatus(status))
+	if len(tasks) == 0 {
 		fmt.Println("Задач с таким статусом не найдено.")
+		return
 	}
+	printTasks(tasks)
 }

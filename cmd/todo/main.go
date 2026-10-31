@@ -9,9 +9,13 @@ import (
 
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/cli"
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/model"
+	"github.com/alexander-pogorelov/go-basic-homeworks/internal/storage"
 )
 
 func main() {
+	store := storage.NewMemoryStorage()
+	storage.Seed(store)
+
 	scanner := bufio.NewScanner(os.Stdin)
 
 	for {
@@ -22,47 +26,46 @@ func main() {
 		fmt.Println("  3 - добавить новую задачу")
 		fmt.Println("  4 - выйти")
 		fmt.Print("Выберите пункт: ")
-		command, success := cli.ReadLine(scanner)
-		if !success {
+
+		command, ok := cli.ReadLine(scanner)
+		if !ok {
 			fmt.Println("Ввод закончился, выходим.")
 			return
 		}
+
 		switch command {
 		case "1":
 			fmt.Println()
 			fmt.Println("Все задачи:")
-			cli.PrintTasks()
+			cli.PrintTasks(store)
 		case "2":
 			fmt.Println()
 			fmt.Print("Выберите статус: ")
-			status, success := cli.ReadLine(scanner)
-			if !success {
+			status, ok := cli.ReadLine(scanner)
+			if !ok {
 				fmt.Println("Ввод закончился, выходим.")
 				return
 			}
-			if !model.IsStatusValid(status) {
-				fmt.Println("Выбран невалидный статус")
-				cli.PrintValidStatuses()
-				continue
-			}
-			cli.PrintTasksByStatus(status)
+			cli.PrintTasksByStatus(store, status)
+
 		case "3":
 			fmt.Println()
 			fmt.Print("Введите название задачи: ")
-			title, success := cli.ReadLine(scanner)
-			if !success {
+			title, ok := cli.ReadLine(scanner)
+			if !ok {
 				fmt.Println("Ввод закончился, выходим.")
 				return
 			}
 			fmt.Print("Введите статус задачи: ")
-			status, success := cli.ReadLine(scanner)
-			if !success {
+			status, ok := cli.ReadLine(scanner)
+			if !ok {
 				fmt.Println("Ввод закончился, выходим.")
 				return
 			}
-			err := model.AddTask(title, status)
+			t, err := model.NewTask(title, status)
 			switch {
 			case err == nil:
+				store.Add(t)
 				fmt.Println("Задача успешно добавлена.")
 			case errors.Is(err, model.ErrEmptyTitle):
 				fmt.Println("Ошибка! Вы не ввели название задачи.")
@@ -74,9 +77,11 @@ func main() {
 			default:
 				fmt.Println("Ошибка:", err)
 			}
+
 		case "4":
 			fmt.Println("Выход.")
 			return
+
 		default:
 			fmt.Printf("Неизвестная команда %q. Введите 1, 2, 3 или 4.\n", command)
 		}
