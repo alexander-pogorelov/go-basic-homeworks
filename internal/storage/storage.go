@@ -1,3 +1,4 @@
+// Package storage содержит реализации хранилищ задач,
 package storage
 
 import (

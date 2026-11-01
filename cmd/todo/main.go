@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -13,45 +14,57 @@ import (
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/storage"
 )
 
+var ErrInvalidID = errors.New("ID должен быть целым числом")
+
 func main() {
 	store := storage.NewMemoryStorage()
 	storage.Seed(store)
 	scanner := bufio.NewScanner(os.Stdin)
 
-	for {
-		printMenu()
-		command, ok := cli.ReadLine(scanner)
-		if !ok {
+	if err := run(store, scanner); err != nil {
+		if errors.Is(err, io.EOF) {
 			fmt.Println("Ввод закончился, выходим.")
 			return
 		}
+		fmt.Println("Ошибка:", err)
+	}
+}
 
+func run(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
+	for {
+		printMenu()
+		command, err := readLine(scanner)
+		if err != nil {
+			return err
+		}
 		switch command {
 		case "1":
-			handleListAll(store)
+			if err := handleListAll(store); err != nil {
+				return err
+			}
 		case "2":
-			if !handleListByID(store, scanner) {
-				return
+			if err := handleListByID(store, scanner); err != nil {
+				return err
 			}
 		case "3":
-			if !updateTaskStatus(store, scanner) {
-				return
+			if err := updateTaskStatus(store, scanner); err != nil {
+				return err
 			}
 		case "4":
-			if !deleteTask(store, scanner) {
-				return
+			if err := deleteTask(store, scanner); err != nil {
+				return err
 			}
 		case "5":
-			if !handleListByStatus(store, scanner) {
-				return
+			if err := handleListByStatus(store, scanner); err != nil {
+				return err
 			}
 		case "6":
-			if !addTask(store, scanner) {
-				return
+			if err := addTask(store, scanner); err != nil {
+				return err
 			}
 		case "7":
 			fmt.Println("Выход.")
-			return
+			return nil
 		default:
 			fmt.Printf("Неизвестная команда %q. Введите 1, 2, 3, 4, 5, 6 или 7.\n", command)
 		}
@@ -71,144 +84,121 @@ func printMenu() {
 	fmt.Print("Выберите пункт: ")
 }
 
-func handleListAll(store *storage.MemoryStorage) bool {
+func readLine(scanner *bufio.Scanner) (string, error) {
+	s, ok := cli.ReadLine(scanner)
+	if !ok {
+		return "", io.EOF
+	}
+	return s, nil
+}
+
+func readTaskID(scanner *bufio.Scanner) (int, error) {
+	raw, err := readLine(scanner)
+	if err != nil {
+		return 0, err
+	}
+	id, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, ErrInvalidID
+	}
+	return id, nil
+}
+
+func handleListAll(store *storage.MemoryStorage) error {
 	fmt.Println()
 	fmt.Println("Все задачи:")
 	cli.PrintTasks(store.GetAll())
-	return true
+	return nil
 }
 
-func handleListByID(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
+func handleListByID(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
 	fmt.Println()
 	fmt.Print("Введите ID задачи: ")
-	id, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
-	}
-	n, err := strconv.Atoi(id)
+	n, err := readTaskID(scanner)
 	if err != nil {
-		fmt.Println("Вы ввели не число.")
-		return true
+		return handleError(err)
 	}
 	t, err := store.GetByID(n)
 	if err != nil {
-		fmt.Println(err)
-		return true
+		return handleError(err)
 	}
-	fmt.Println(t)
-
-	return true
+	cli.PrintTasks([]*model.Task{t})
+	return nil
 }
 
-func updateTaskStatus(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
+func updateTaskStatus(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
 	fmt.Println()
 	fmt.Print("Введите ID задачи: ")
-	id, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
-	}
-	n, err := strconv.Atoi(id)
+	n, err := readTaskID(scanner)
 	if err != nil {
-		fmt.Println("Вы ввели не число.")
-		return true
+		return handleError(err)
 	}
 	t, err := store.GetByID(n)
 	if err != nil {
-		fmt.Println(err)
-		return true
+		return handleError(err)
 	}
-
 	fmt.Println()
 	fmt.Print("Выберите статус: ")
-
-	status, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
-	}
-
-	err = t.Update(t.Title(), status)
+	status, err := readLine(scanner)
 	if err != nil {
-		fmt.Println(err)
-		return true
+		return handleError(err)
 	}
-
-	fmt.Println("Задача успешно обновлена.")
-
-	return true
-}
-
-func deleteTask(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
-	fmt.Println()
-	fmt.Print("Введите ID задачи: ")
-	id, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
-	}
-	n, err := strconv.Atoi(id)
-	if err != nil {
-		fmt.Println("Вы ввели не число.")
-		return true
-	}
-	_, err = store.GetByID(n)
-	if err != nil {
-		fmt.Println(err)
-		return true
-	}
-
-	err = store.Delete(n)
-	if err != nil {
-		fmt.Println(err)
-		return true
-	}
-
-	fmt.Println("Задача успешно удалена.")
-
-	return true
-}
-
-func handleListByStatus(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
-	fmt.Println()
-	fmt.Print("Выберите статус: ")
-
-	status, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
-	}
-
 	if !model.IsStatusValid(status) {
 		fmt.Println("Выбран невалидный статус")
 		cli.PrintValidStatuses()
-		return true
+		return nil
 	}
-
-	cli.PrintTasksByStatus(store, model.CastToStatus(status))
-
-	return true
+	if err := t.Update(t.Title(), status); err != nil {
+		return handleError(err)
+	}
+	fmt.Println("Задача успешно обновлена.")
+	return nil
 }
 
-func addTask(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
+func deleteTask(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
+	fmt.Println()
+	fmt.Print("Введите ID задачи: ")
+	n, err := readTaskID(scanner)
+	if err != nil {
+		return handleError(err)
+	}
+	if err := store.Delete(n); err != nil {
+		return handleError(err)
+	}
+	fmt.Println("Задача успешно удалена.")
+	return nil
+}
+
+func handleListByStatus(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
+	fmt.Println()
+	fmt.Print("Выберите статус: ")
+	status, err := readLine(scanner)
+	if err != nil {
+		return handleError(err)
+	}
+	if !model.IsStatusValid(status) {
+		fmt.Println("Выбран невалидный статус")
+		cli.PrintValidStatuses()
+		return nil
+	}
+	cli.PrintTasksByStatus(store, model.CastToStatus(status))
+	return nil
+}
+
+func addTask(store *storage.MemoryStorage, scanner *bufio.Scanner) error {
 	fmt.Println()
 	fmt.Print("Введите название задачи: ")
-	title, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
+	title, err := readLine(scanner)
+	if err != nil {
+		return handleError(err)
 	}
 
 	fmt.Print("Введите статус задачи: ")
-	status, ok := cli.ReadLine(scanner)
-	if !ok {
-		fmt.Println("Ввод закончился, выходим.")
-		return false
+	status, err := readLine(scanner)
+	if err != nil {
+		return handleError(err)
 	}
-
 	t, err := model.NewTask(title, status)
-
 	switch {
 	case err == nil:
 		store.Add(t)
@@ -223,6 +213,21 @@ func addTask(store *storage.MemoryStorage, scanner *bufio.Scanner) bool {
 	default:
 		fmt.Println("Ошибка:", err)
 	}
+	return nil
+}
 
-	return true
+func handleError(err error) error {
+	switch {
+	case errors.Is(err, io.EOF):
+		return err
+	case errors.Is(err, ErrInvalidID):
+		fmt.Println("Вы ввели не число.")
+		return nil
+	case errors.Is(err, storage.ErrTaskNotFound):
+		fmt.Println("Задача не найдена")
+		return nil
+	default:
+		fmt.Println(err)
+		return nil
+	}
 }
