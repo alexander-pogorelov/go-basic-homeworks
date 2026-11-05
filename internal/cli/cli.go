@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/alexander-pogorelov/go-basic-homeworks/internal/model"
+	"github.com/alexander-pogorelov/go-basic-homeworks/internal/storage"
 )
 
 // ReadLine читает одну строку из сканера и обрезает пробелы по краям.
@@ -21,10 +22,10 @@ func printHeaders() {
 	fmt.Printf("%-4s %-15s %-20s %-20s %s\n", "ID", "СТАТУС", "СОЗДАНА", "ОБНОВЛЕНА", "НАЗВАНИЕ")
 }
 
-// PrintTasks печатает список всех задач в табличном виде.
-func PrintTasks() {
+// PrintTasks печатает все задачи.
+func PrintTasks(tasks []*model.Task) {
 	printHeaders()
-	for _, t := range model.Tasks() {
+	for _, t := range tasks {
 		fmt.Println(t)
 	}
 }
@@ -38,17 +39,11 @@ func PrintValidStatuses() {
 }
 
 // PrintTasksByStatus печатает задачи с указанным статусом.
-func PrintTasksByStatus(status string) {
-	st := model.CastToStatus(status)
-	printHeaders()
-	found := false
-	for _, t := range model.Tasks() {
-		if st == t.Status() {
-			found = true
-			fmt.Println(t)
-		}
-	}
-	if !found {
+func PrintTasksByStatus(s *storage.MemoryStorage, status model.Status) {
+	tasks := s.FilterByStatus(status)
+	if len(tasks) == 0 {
 		fmt.Println("Задач с таким статусом не найдено.")
+		return
 	}
+	PrintTasks(tasks)
 }
